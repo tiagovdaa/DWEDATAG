@@ -13,8 +13,6 @@ Here’s the breakdown:
 **A**nsible
 **G**itHub Actions
 
-*because we like acronyms*
-
 ## Project Goal
 
 The objective of this project is to create an EC2 instance on AWS to host a Dockerized WordPress and MariaDB setup, with persistence on a EBS volume.
