@@ -1,0 +1,5 @@
+- name: Ensure EC2_USER is a member of the docker group
+  user:
+    name: "{{ lookup('env', 'EC2_USER') }}"
+    groups: docker
+    append: yes

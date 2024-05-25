@@ -1,0 +1,4 @@
+certbot_email: "{{ lookup('env', 'DOMAIN_EMAIL') }}"
+certbot_domains:
+  - "{{ lookup('env', 'DOMAIN_NAME') }}"
+  - "www.{{ lookup('env', 'DOMAIN_NAME') }}"

@@ -1,0 +1,15 @@
+- name: Configure EC2 instance
+  hosts: ec2_instance
+  become: yes
+  roles:
+    - packages
+    - system
+    - docker
+    - user_mgmt
+    - certbot
+    - deployment
+  vars:
+    ec2_instance_id: "{{ lookup('env', 'EC2_INSTANCE_ID') }}"
+    ebs_volume_id: "{{ lookup('env', 'EBS_VOLUME_ID') }}"
+    ebs_device_name: "{{ lookup('env', 'EBS_DEVICE_NAME') }}"
+    aws_region: "eu-west-1"

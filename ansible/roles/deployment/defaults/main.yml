@@ -1,0 +1,8 @@
+wordpress_db_user: "otg"
+wordpress_db_password: "devops"
+wordpress_db_name: "otg"
+mysql_root_password: "devops"
+mysql_database: "otg"
+mysql_user: "otg"
+mysql_password: "devops"
+domain_name: "oldtechgeek.org"

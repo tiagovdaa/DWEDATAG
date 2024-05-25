@@ -1,0 +1,44 @@
+- name: Create /data/wordpress directory
+  file:
+    path: /data/wordpress
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create /data/db directory
+  file:
+    path: /data/db
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create /data/deployment directory
+  file:
+    path: /data/deployment
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy docker-compose.yml to /data/deployment
+  template:
+    src: templates/docker-compose.yml.j2
+    dest: /data/deployment/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Copy nginx.conf to /data/deployment
+  template:
+    src: templates/nginx.conf.j2
+    dest: /data/deployment/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Run docker-compose up
+  command: docker-compose up -d
+  args:
+    chdir: /data/deployment

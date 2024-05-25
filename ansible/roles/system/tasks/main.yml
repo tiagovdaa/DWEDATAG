@@ -1,0 +1,14 @@
+- name: Ensure the volume is formatted as ext4
+  command: mkfs.ext4 -F "{{ ebs_device_name }}"
+
+- name: Create mount point
+  file:
+    path: /data
+    state: directory
+
+- name: Mount the volume
+  mount:
+    path: /data
+    src: "{{ ebs_device_name }}"
+    fstype: ext4
+    state: mounted

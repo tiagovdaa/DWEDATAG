@@ -1,0 +1,81 @@
+name: Deploy OTG Infrastructure at AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: 'Terraform Deploy'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout GitHub Actions'
+        uses: actions/checkout@v4.1.6
+
+      - name: Set up SSH keypair
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa.pub
+          chmod 600 ~/.ssh/id_rsa
+          chmod 644 ~/.ssh/id_rsa.pub
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v3.1.1
+        with:
+          terraform_version: 1.8.3
+
+      - name: 'Configure AWS credentials'
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: 'Terraform Init'
+        run: terraform init
+
+      - name: 'Terraform Apply'
+        run: terraform apply -auto-approve
+
+      - name: Get EC2 public IP
+        id: get_ip
+        run: echo "EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_ENV
+  
+      - name: Install Docker       
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get Terraform outputs
+        id: outputs
+        run: |
+          echo "EC2_INSTANCE_ID=$(terraform output -raw ec2_instance_id)" >> $GITHUB_ENV
+          echo "EBS_VOLUME_ID=$(terraform output -raw volume_id)" >> $GITHUB_ENV
+          echo "EBS_DEVICE_NAME=$(terraform output -raw ebs_device_name)" >> $GITHUB_ENV
+
+      - name: Run Ansible playbook
+        run: |
+          echo "[ec2_instance]" > $(pwd)/ansible/inventory
+          echo "${{ env.EC2_PUBLIC_IP }}" >> $(pwd)/ansible/inventory
+          docker run --rm \
+            -v $(pwd)/ansible:/ansible \
+            -v ~/.ssh/id_rsa:/home/${{ vars.EC2_USER }}/.ssh/id_rsa \
+            -e ANSIBLE_HOST_KEY_CHECKING=False \
+            -e EC2_USER=${{ vars.EC2_USER }} \
+            -e EC2_INSTANCE_ID=${{ env.EC2_INSTANCE_ID }} \
+            -e EBS_VOLUME_ID=${{ env.EBS_VOLUME_ID }} \
+            -e EBS_DEVICE_NAME=${{ env.EBS_DEVICE_NAME }} \
+            -e WORDPRESS_DB_USER=${{ secrets.WORDPRESS_DB_USER }} \
+            -e WORDPRESS_DB_PASSWORD=${{ secrets.WORDPRESS_DB_PASSWORD }} \
+            -e WORDPRESS_DB_NAME=${{ secrets.WORDPRESS_DB_NAME }} \
+            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} \
+            -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
+            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
+            -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
+            -e DOMAIN_NAME=${{ vars.DOMAIN_NAME }} \
+            -e DOMAIN_EMAIL=${{ vars.DOMAIN_EMAIL }} \
+            ghcr.io/ansible/creator-ee:v0.21.0 \
+            ansible-playbook -i /ansible/inventory /ansible/main.yml -u ${{ vars.EC2_USER }} --private-key /home/${{ vars.EC2_USER }}/.ssh/id_rsa
+            

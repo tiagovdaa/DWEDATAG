@@ -1,0 +1,7 @@
+packages_to_install:
+  - docker.io
+  - docker-compose
+  - certbot
+  - python3-pip
+  - python3-botocore
+  - python3-boto3

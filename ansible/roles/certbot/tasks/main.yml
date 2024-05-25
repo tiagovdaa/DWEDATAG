@@ -1,0 +1,37 @@
+- name: Ensure Certbot is installed
+  apt:
+    name: certbot
+    state: present
+
+- name: Ensure /var/www/certbot directory exists
+  file:
+    path: /var/www/certbot
+    state: directory
+
+- name: Copy docker-compose-certbot.yml to EC2 instance
+  template:
+    src: docker-compose-certbot.yml.j2
+    dest: /tmp/docker-compose-certbot.yml
+
+- name: Copy nginx-certbot.conf to EC2 instance
+  template:
+    src: nginx-certbot.conf.j2
+    dest: /tmp/nginx-certbot.conf
+
+- name: Start temporary Nginx for Certbot
+  command: docker-compose -f docker-compose-certbot.yml up -d
+  args:
+    chdir: /tmp
+
+- name: Obtain SSL certificates with Certbot
+  command: >
+    sudo certbot certonly --webroot --webroot-path /var/www/certbot
+    {% for domain in certbot_domains %}
+    -d {{ domain }}
+    {% endfor %}
+    --agree-tos --email {{ certbot_email }} --non-interactive
+
+- name: Stop temporary Nginx for Certbot
+  command: docker-compose -f docker-compose-certbot.yml down
+  args:
+    chdir: /tmp

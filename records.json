@@ -1,0 +1,33 @@
+{
+    "ResourceRecordSets": [
+        {
+            "Name": "oldtechgeek.org.",
+            "Type": "NS",
+            "TTL": 172800,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-1777.awsdns-30.co.uk."
+                },
+                {
+                    "Value": "ns-21.awsdns-02.com."
+                },
+                {
+                    "Value": "ns-823.awsdns-38.net."
+                },
+                {
+                    "Value": "ns-1488.awsdns-58.org."
+                }
+            ]
+        },
+        {
+            "Name": "oldtechgeek.org.",
+            "Type": "SOA",
+            "TTL": 900,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-1777.awsdns-30.co.uk. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+                }
+            ]
+        }
+    ]
+}
